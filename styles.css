@@ -1,0 +1,123 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    padding: 2rem;
+    background: linear-gradient(to right, #fdb912 50%, #a90432 50%);
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.profile {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.profile-img {
+    width: 100px;
+    border-radius: 50%;
+    margin-bottom: 0.5rem;
+    border: 3px solid white;
+    background: #f0f0f0;
+}
+
+.profile-name {
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+}
+
+.profile-number {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 4.5rem;
+    margin-bottom: 1rem;
+}
+
+.links-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    width: 100%;
+}
+
+.category {
+    flex: 1 1 200px;
+    min-width: 150px;
+    margin-bottom: 1rem;
+}
+
+.category-title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: white;
+    text-align: center;
+}
+
+.link {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: #000;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.link:hover {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobil uyum için medya sorgusu */
+@media (max-width: 768px) {
+    .links-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        /* Mobilde boşlukları sıfırlıyoruz */
+    }
+
+    .category {
+        width: 100%;
+        margin-bottom: 0;
+        /* Kategori altındaki boşluğu kaldırıyoruz */
+    }
+
+    .category-title {
+        font-size: 0.9rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-img {
+        width: 70px;
+    }
+
+    .profile-number {
+        font-size: 2rem;
+    }
+}

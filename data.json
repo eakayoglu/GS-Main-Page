@@ -1,0 +1,58 @@
+{
+    "profile": {
+        "name": "Emre Akayoglu",
+        "number": "10",
+        "image": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Galatasaray_Sports_Club_Logo.png"
+    },
+    "settings": {
+        "backgroundColorLeft": "#FDB912",
+        "backgroundColorRight": "#A90432",
+        "categoryOrder": [
+            "Personal",
+            "Social Media",
+            "Business",
+            "AI"
+        ]
+    },
+    "links": [
+
+        {
+            "category": "Personal",
+            "name": "Emre Akayoglu Blog",
+            "url": "https://emreakayoglu.com"
+        },
+
+        {
+            "category": "Social Media",
+            "name": "YouTube",
+            "url": "https://www.youtube.com"
+        },
+        {
+            "category": "Social Media",
+            "name": "LinkedIn",
+            "url": "https://www.linkedin.com/"
+        },
+
+        {
+            "category": "Business",
+            "name": "Fiverr",
+            "url": "https://www.fiverr.com"
+        },
+
+        {
+            "category": "AI",
+            "name": "ChatGPT",
+            "url": "https://chatgpt.com"
+        },
+        {
+            "category": "AI",
+            "name": "Gemini",
+            "url": "https://gemini.google.com/"
+        },
+        {
+            "category": "AI",
+            "name": "Claude",
+            "url": "https://claude.ai/"
+        }
+    ]
+}
