@@ -105,6 +105,3 @@ Feel free to fork this project and submit pull requests for any improvements.
 Emre AKAYOGLU
 
 ---
-
-For more information or questions, please open an issue in the repository.
-```
