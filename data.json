@@ -53,6 +53,11 @@
             "category": "AI",
             "name": "Claude",
             "url": "https://claude.ai/"
+        },
+        {
+            "category": "AI",
+            "name": "DeepSeek",
+            "url": "https://chat.deepseek.com/"
         }
     ]
 }
