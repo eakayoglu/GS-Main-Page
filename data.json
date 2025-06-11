@@ -9,9 +9,9 @@
         "backgroundColorRight": "#A90432",
         "categoryOrder": [
             "Personal",
+            "AI",
             "Social Media",
-            "Business",
-            "AI"
+            "Business"
         ]
     },
     "links": [
@@ -37,6 +37,12 @@
             "category": "Business",
             "name": "Fiverr",
             "url": "https://www.fiverr.com"
+        },
+
+        {
+            "category": "Business",
+            "name": "GoDaddy",
+            "url": "https://www.godaddy.com"
         },
 
         {
