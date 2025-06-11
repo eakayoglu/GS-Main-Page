@@ -11,28 +11,51 @@ A customizable link sharing website similar to Linktree, built with HTML, CSS, a
 - Gradient background with customizable colors
 - Links open in new tabs
 - Data-driven content management through JSON
+- **Docker support for easy deployment**
 
 ## Project Structure
 
 ```
-wwwroot/
 ├── index.html
 ├── styles.css
 ├── script.js
 ├── data.json
 ├── favicon.png
+├── Dockerfile
+├── docker-compose.yml
 └── README.md
 ```
 
 ## Setup
 
 1. Clone the repository
-2. Place all files in a web server directory
+2. Place all files in a web server directory or use Docker (see below)
 3. Customize `data.json` with your own:
    - Profile information
    - Links
    - Categories
    - Background colors
+
+## Running with Docker
+
+You can run the project easily using Docker or Docker Compose.
+
+### Using Docker only
+
+```sh
+docker build -t gs-main-page .
+docker run -d -p 1414:80 gs-main-page
+```
+
+Then open [http://localhost:1414](http://localhost:1414) in your browser.
+
+### Using Docker Compose
+
+```sh
+docker-compose up --build
+```
+
+This will build and start the service at [http://localhost:1414](http://localhost:1414).
 
 ## Customizing data.json
 
