@@ -154,64 +154,86 @@ class SmartLinkHandler {
                 fallback: 'external'
             },
             
-            // AI Uygulamaları - Uygulama varsa aç, yoksa siteye git
+            // AI Uygulamaları - Çoğu henüz URL scheme desteklemiyor, harici tarayıcıda aç
             'chatgpt.com': {
-                scheme: 'chatgpt://',
-                fallback: 'website'
+                scheme: null,
+                fallback: 'external'
             },
             'chat.openai.com': {
-                scheme: 'chatgpt://',
-                fallback: 'website'
+                scheme: null,
+                fallback: 'external'
             },
             'gemini.google.com': {
-                scheme: 'gemini://',
-                fallback: 'website'
+                scheme: null,
+                fallback: 'external'
             },
             'bard.google.com': {
-                scheme: 'gemini://',
-                fallback: 'website'
+                scheme: null,
+                fallback: 'external'
             },
             'claude.ai': {
-                scheme: 'claude://',
-                fallback: 'website'
+                scheme: null,
+                fallback: 'external'
             },
             'chat.deepseek.com': {
-                scheme: 'deepseek://',
-                fallback: 'website'
+                scheme: null,
+                fallback: 'external'
             },
             'copilot.microsoft.com': {
-                scheme: 'copilot://',
-                fallback: 'website'
+                scheme: null,
+                fallback: 'external'
             },
             'poe.com': {
                 scheme: 'poe://',
-                fallback: 'website'
+                fallback: 'external'
             },
             'perplexity.ai': {
-                scheme: 'perplexity://',
-                fallback: 'website'
+                scheme: null,
+                fallback: 'external'
             },
             
             // İş Uygulamaları - Uygulama varsa aç, yoksa siteye git
             'notion.so': {
                 scheme: 'notion://',
-                fallback: 'website'
+                fallback: 'external'
+            },
+            'notion.com': {
+                scheme: 'notion://',
+                fallback: 'external'
             },
             'slack.com': {
                 scheme: 'slack://',
-                fallback: 'website'
+                fallback: 'external'
             },
             'discord.com': {
                 scheme: 'discord://',
-                fallback: 'website'
+                fallback: 'external'
+            },
+            'discord.gg': {
+                scheme: 'discord://',
+                fallback: 'external'
             },
             'zoom.us': {
                 scheme: 'zoomus://',
-                fallback: 'website'
+                fallback: 'external'
             },
             'teams.microsoft.com': {
                 scheme: 'msteams://',
-                fallback: 'website'
+                fallback: 'external'
+            },
+            
+            // Özel AI Uygulamaları (Gerçek scheme desteği olanlar)
+            'character.ai': {
+                scheme: null,
+                fallback: 'external'
+            },
+            'janitorai.com': {
+                scheme: null,
+                fallback: 'external'
+            },
+            'replika.ai': {
+                scheme: 'replika://',
+                fallback: 'external'
             }
         };
         this.init();
@@ -230,6 +252,10 @@ class SmartLinkHandler {
         if (!link.classList.contains('link')) return;
 
         e.preventDefault();
+        
+        const domain = this.extractDomain(link.href);
+        console.log(`🔗 Link tıklandı: ${domain} → ${link.href}`);
+        
         this.openSmartLink(link.href);
     }
 
@@ -239,14 +265,17 @@ class SmartLinkHandler {
 
         if (mapping) {
             if (mapping.fallback === 'external') {
-                // Sosyal medya: Harici tarayıcıda aç
+                // Harici tarayıcıda aç (AI uygulamaları ve sosyal medya)
                 this.openExternalBrowser(url);
             } else if (mapping.fallback === 'website') {
-                // AI/İş uygulamaları: Uygulama varsa uygulamada, yoksa siteye git
+                // İş uygulamaları: Uygulama varsa uygulamada, yoksa siteye git
                 this.tryAppThenWebsite(url, mapping.scheme);
-            } else {
-                // Varsayılan: Uygulama varsa uygulamada, yoksa harici tarayıcıda aç
+            } else if (mapping.scheme && mapping.scheme !== null) {
+                // Scheme varsa: Uygulama varsa uygulamada, yoksa harici tarayıcıda aç
                 this.tryAppThenExternal(url, mapping.scheme);
+            } else {
+                // Scheme yoksa direkt harici tarayıcıda aç
+                this.openExternalBrowser(url);
             }
         } else {
             // Varsayılan: PWA içinde aç
@@ -264,6 +293,7 @@ class SmartLinkHandler {
     }
 
     openExternalBrowser(url) {
+        console.log(`🌐 Harici tarayıcıda açılıyor: ${url}`);
         // PWA'dan çıkarak harici tarayıcıda aç
         if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
             // PWA modunda - yeni pencere aç (PWA session korunur)
@@ -412,39 +442,14 @@ class SmartLinkHandler {
                 return `linkedin://profile/${urlObj.pathname}`;
             }
             
-            // ChatGPT özel durumu
-            if (scheme === 'chatgpt://') {
-                return 'chatgpt://';
-            }
-            
-            // Gemini özel durumu
-            if (scheme === 'gemini://') {
-                return 'gemini://';
-            }
-            
-            // Claude özel durumu
-            if (scheme === 'claude://') {
-                return 'claude://';
-            }
-            
-            // DeepSeek özel durumu
-            if (scheme === 'deepseek://') {
-                return 'deepseek://';
-            }
-            
-            // Microsoft Copilot özel durumu
-            if (scheme === 'copilot://') {
-                return 'copilot://';
-            }
-            
-            // Poe özel durumu
+            // Poe özel durumu (Gerçek scheme desteği var)
             if (scheme === 'poe://') {
                 return 'poe://';
             }
             
-            // Perplexity özel durumu
-            if (scheme === 'perplexity://') {
-                return 'perplexity://';
+            // Replika özel durumu (Gerçek scheme desteği var)
+            if (scheme === 'replika://') {
+                return 'replika://';
             }
             
             // Notion özel durumu
@@ -591,5 +596,5 @@ function hapticFeedback(type = 'light') {
 // PWA durumunu console'da göster
 console.log('PWA Mode:', isPWAMode());
 console.log('Mobile Features Loaded ✓');
-console.log('Smart Link Handler: AI uygulamaları için akıllı açma sistemi aktif');
+console.log('Smart Link Handler: AI/Sosyal medya uygulamaları harici tarayıcıda açılır');
 console.log('PWA Session Recovery: Beyaz ekran koruması aktif'); 
