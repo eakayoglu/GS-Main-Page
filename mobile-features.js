@@ -266,7 +266,7 @@ class SmartLinkHandler {
     openExternalBrowser(url) {
         // PWA'dan çıkarak harici tarayıcıda aç
         if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-            // PWA modunda - yeni pencere aç
+            // PWA modunda - yeni pencere aç (PWA session korunur)
             window.open(url, '_blank', 'noopener,noreferrer');
         } else {
             // Normal tarayıcıda - yeni sekme aç
@@ -275,21 +275,49 @@ class SmartLinkHandler {
     }
 
     tryAppThenExternal(url, scheme) {
+        // Haptic feedback ver
+        hapticFeedback('light');
+        
         // Önce uygulamayı dene
         const appUrl = this.convertToAppUrl(url, scheme);
+        let appOpened = false;
         
-        // App URL'si varsa dene
         if (appUrl) {
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = appUrl;
-            document.body.appendChild(iframe);
+            // App scheme'i ile açmayı dene - PWA session'ını koruyarak
+            const visibilityHandler = () => {
+                if (document.hidden) {
+                    appOpened = true;
+                    document.removeEventListener('visibilitychange', visibilityHandler);
+                    console.log('Uygulama başarıyla açıldı!');
+                }
+            };
             
-            // 2 saniye sonra iframe'i kaldır ve fallback'e geç
-            setTimeout(() => {
-                document.body.removeChild(iframe);
+            document.addEventListener('visibilitychange', visibilityHandler);
+            
+            // PWA session'ını koruyarak app'i aç
+            try {
+                // Gizli iframe ile app scheme'i dene
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = appUrl;
+                document.body.appendChild(iframe);
+                
+                // 2.5 saniye sonra kontrol et
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    document.removeEventListener('visibilitychange', visibilityHandler);
+                    
+                    // Eğer uygulama açılmadıysa harici tarayıcıda aç
+                    if (!appOpened && !document.hidden) {
+                        console.log('Uygulama bulunamadı, harici tarayıcıda açılıyor...');
+                        this.openExternalBrowser(url);
+                    }
+                }, 2500);
+                
+            } catch (e) {
+                console.log('App scheme failed:', e);
                 this.openExternalBrowser(url);
-            }, 2000);
+            }
         } else {
             // Direkt harici tarayıcıda aç
             this.openExternalBrowser(url);
@@ -318,9 +346,21 @@ class SmartLinkHandler {
             
             document.addEventListener('visibilitychange', visibilityHandler);
             
-            // App URL'sini dene
+            // App URL'sini dene - PWA session'ını koruyarak
             try {
-                window.location.href = appUrl;
+                // Gizli iframe ile app scheme'i dene
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = appUrl;
+                document.body.appendChild(iframe);
+                
+                // Iframe'i kısa süre sonra temizle
+                setTimeout(() => {
+                    if (iframe.parentNode) {
+                        document.body.removeChild(iframe);
+                    }
+                }, 1000);
+                
             } catch (e) {
                 console.log('App scheme failed:', e);
             }
@@ -451,6 +491,65 @@ class SmartLinkHandler {
     }
 }
 
+// PWA Session Recovery Sistemi
+class PWASessionRecovery {
+    constructor() {
+        this.init();
+    }
+    
+    init() {
+        // Sayfa yüklendiğinde kontrol et
+        window.addEventListener('load', this.checkPageState.bind(this));
+        
+        // Visibility change ile geri gelme kontrolü
+        document.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
+        
+        // Page show event ile geri gelme kontrolü
+        window.addEventListener('pageshow', this.handlePageShow.bind(this));
+    }
+    
+    checkPageState() {
+        // Eğer sayfa boşsa veya sadece beyaz ekran varsa
+        if (document.body.children.length === 0 || 
+            (document.body.textContent.trim() === '' && document.body.children.length < 3)) {
+            console.log('Boş sayfa algılandı, index sayfasına yönlendiriliyor...');
+            this.reloadToIndex();
+        }
+    }
+    
+    handleVisibilityChange() {
+        if (!document.hidden && this.shouldRecover()) {
+            console.log('PWA geri geldi, sayfa durumu kontrol ediliyor...');
+            setTimeout(() => {
+                this.checkPageState();
+            }, 500);
+        }
+    }
+    
+    handlePageShow(event) {
+        // Eğer sayfa cache'den geliyorsa ve boşsa
+        if (event.persisted && this.shouldRecover()) {
+            console.log('Cache\'den gelen sayfa boş, yenileniyor...');
+            this.reloadToIndex();
+        }
+    }
+    
+    shouldRecover() {
+        // PWA modunda ve ana sayfada değilsek recovery gerekli
+        return isPWAMode() && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    }
+    
+    reloadToIndex() {
+        // Index sayfasına yönlendir
+        if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
+            window.location.href = '/';
+        } else {
+            // Aynı sayfadaysak reload et
+            window.location.reload();
+        }
+    }
+}
+
 // Mobil özellikleri başlat
 document.addEventListener('DOMContentLoaded', () => {
     // Sadece mobil cihazlarda pull-to-refresh etkinleştir
@@ -460,6 +559,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Akıllı link handler'ı her zaman başlat
     new SmartLinkHandler();
+    
+    // PWA session recovery sistemi başlat
+    new PWASessionRecovery();
 });
 
 // PWA display mode algılama
@@ -489,4 +591,5 @@ function hapticFeedback(type = 'light') {
 // PWA durumunu console'da göster
 console.log('PWA Mode:', isPWAMode());
 console.log('Mobile Features Loaded ✓');
-console.log('Smart Link Handler: AI uygulamaları için akıllı açma sistemi aktif'); 
+console.log('Smart Link Handler: AI uygulamaları için akıllı açma sistemi aktif');
+console.log('PWA Session Recovery: Beyaz ekran koruması aktif'); 
