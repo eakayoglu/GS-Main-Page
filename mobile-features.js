@@ -108,6 +108,7 @@ class PullToRefresh {
 class SmartLinkHandler {
     constructor() {
         this.appMappings = {
+            // Sosyal Medya - Harici tarayıcıda aç
             'youtube.com': {
                 scheme: 'youtube://',
                 fallback: 'external'
@@ -151,6 +152,66 @@ class SmartLinkHandler {
             'github.com': {
                 scheme: 'github://',
                 fallback: 'external'
+            },
+            
+            // AI Uygulamaları - Uygulama varsa aç, yoksa siteye git
+            'chatgpt.com': {
+                scheme: 'chatgpt://',
+                fallback: 'website'
+            },
+            'chat.openai.com': {
+                scheme: 'chatgpt://',
+                fallback: 'website'
+            },
+            'gemini.google.com': {
+                scheme: 'gemini://',
+                fallback: 'website'
+            },
+            'bard.google.com': {
+                scheme: 'gemini://',
+                fallback: 'website'
+            },
+            'claude.ai': {
+                scheme: 'claude://',
+                fallback: 'website'
+            },
+            'chat.deepseek.com': {
+                scheme: 'deepseek://',
+                fallback: 'website'
+            },
+            'copilot.microsoft.com': {
+                scheme: 'copilot://',
+                fallback: 'website'
+            },
+            'poe.com': {
+                scheme: 'poe://',
+                fallback: 'website'
+            },
+            'perplexity.ai': {
+                scheme: 'perplexity://',
+                fallback: 'website'
+            },
+            
+            // İş Uygulamaları - Uygulama varsa aç, yoksa siteye git
+            'notion.so': {
+                scheme: 'notion://',
+                fallback: 'website'
+            },
+            'slack.com': {
+                scheme: 'slack://',
+                fallback: 'website'
+            },
+            'discord.com': {
+                scheme: 'discord://',
+                fallback: 'website'
+            },
+            'zoom.us': {
+                scheme: 'zoomus://',
+                fallback: 'website'
+            },
+            'teams.microsoft.com': {
+                scheme: 'msteams://',
+                fallback: 'website'
             }
         };
         this.init();
@@ -178,10 +239,13 @@ class SmartLinkHandler {
 
         if (mapping) {
             if (mapping.fallback === 'external') {
-                // Harici tarayıcıda aç
+                // Sosyal medya: Harici tarayıcıda aç
                 this.openExternalBrowser(url);
+            } else if (mapping.fallback === 'website') {
+                // AI/İş uygulamaları: Uygulama varsa uygulamada, yoksa siteye git
+                this.tryAppThenWebsite(url, mapping.scheme);
             } else {
-                // Uygulama varsa uygulamada, yoksa harici tarayıcıda aç
+                // Varsayılan: Uygulama varsa uygulamada, yoksa harici tarayıcıda aç
                 this.tryAppThenExternal(url, mapping.scheme);
             }
         } else {
@@ -232,6 +296,64 @@ class SmartLinkHandler {
         }
     }
 
+    tryAppThenWebsite(url, scheme) {
+        // Haptic feedback ver
+        hapticFeedback('light');
+        
+        // Önce uygulamayı dene
+        const appUrl = this.convertToAppUrl(url, scheme);
+        let appOpened = false;
+        
+        if (appUrl) {
+            // App scheme'i ile açmayı dene
+            const startTime = Date.now();
+            
+            // Visibility change ile app açılma kontrolü
+            const visibilityHandler = () => {
+                if (document.hidden) {
+                    appOpened = true;
+                    document.removeEventListener('visibilitychange', visibilityHandler);
+                }
+            };
+            
+            document.addEventListener('visibilitychange', visibilityHandler);
+            
+            // App URL'sini dene
+            try {
+                window.location.href = appUrl;
+            } catch (e) {
+                console.log('App scheme failed:', e);
+            }
+            
+            // 2.5 saniye sonra kontrol et
+            setTimeout(() => {
+                document.removeEventListener('visibilitychange', visibilityHandler);
+                
+                // Eğer uygulama açılmadıysa (sayfa hala görünürse) siteye git
+                if (!appOpened && !document.hidden) {
+                    console.log('App not found, opening website...');
+                    this.openWebsite(url);
+                } else if (appOpened) {
+                    console.log('App opened successfully!');
+                }
+            }, 2500);
+        } else {
+            // App URL oluşturulamazsa direkt siteye git
+            this.openWebsite(url);
+        }
+    }
+
+    openWebsite(url) {
+        // PWA içinde mi yoksa normal tarayıcıda mı olduğumuzu kontrol et
+        if (isPWAMode()) {
+            // PWA modundaysa harici tarayıcıda aç
+            this.openExternalBrowser(url);
+        } else {
+            // Normal tarayıcıdaysa yeni sekmede aç
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+    }
+
     convertToAppUrl(url, scheme) {
         try {
             const urlObj = new URL(url);
@@ -248,6 +370,66 @@ class SmartLinkHandler {
             // LinkedIn özel durumu
             if (scheme === 'linkedin://') {
                 return `linkedin://profile/${urlObj.pathname}`;
+            }
+            
+            // ChatGPT özel durumu
+            if (scheme === 'chatgpt://') {
+                return 'chatgpt://';
+            }
+            
+            // Gemini özel durumu
+            if (scheme === 'gemini://') {
+                return 'gemini://';
+            }
+            
+            // Claude özel durumu
+            if (scheme === 'claude://') {
+                return 'claude://';
+            }
+            
+            // DeepSeek özel durumu
+            if (scheme === 'deepseek://') {
+                return 'deepseek://';
+            }
+            
+            // Microsoft Copilot özel durumu
+            if (scheme === 'copilot://') {
+                return 'copilot://';
+            }
+            
+            // Poe özel durumu
+            if (scheme === 'poe://') {
+                return 'poe://';
+            }
+            
+            // Perplexity özel durumu
+            if (scheme === 'perplexity://') {
+                return 'perplexity://';
+            }
+            
+            // Notion özel durumu
+            if (scheme === 'notion://') {
+                return `notion://www.notion.so${urlObj.pathname}`;
+            }
+            
+            // Slack özel durumu
+            if (scheme === 'slack://') {
+                return `slack://open`;
+            }
+            
+            // Discord özel durumu
+            if (scheme === 'discord://') {
+                return 'discord://';
+            }
+            
+            // Zoom özel durumu
+            if (scheme === 'zoomus://') {
+                return 'zoomus://zoom.us/join';
+            }
+            
+            // Microsoft Teams özel durumu
+            if (scheme === 'msteams://') {
+                return 'msteams://';
             }
             
             // Diğer uygulamalar için basit dönüşüm
@@ -306,4 +488,5 @@ function hapticFeedback(type = 'light') {
 
 // PWA durumunu console'da göster
 console.log('PWA Mode:', isPWAMode());
-console.log('Mobile Features Loaded ✓'); 
+console.log('Mobile Features Loaded ✓');
+console.log('Smart Link Handler: AI uygulamaları için akıllı açma sistemi aktif'); 
