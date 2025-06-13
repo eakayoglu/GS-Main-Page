@@ -162,6 +162,16 @@ class SmartLinkHandler {
                 fallback: 'external'
             },
             
+            // İş Platformları
+            'fiverr.com': {
+                scheme: 'fiverr://',
+                fallback: 'external'
+            },
+            'upwork.com': {
+                scheme: 'upwork://',
+                fallback: 'external'
+            },
+            
             // AI Uygulamaları - Çoğu henüz URL scheme desteklemiyor, harici tarayıcıda aç
             'chatgpt.com': {
                 scheme: null,
@@ -262,7 +272,8 @@ class SmartLinkHandler {
         e.preventDefault();
         
         const domain = this.extractDomain(link.href);
-        console.log(`🔗 Link tıklandı: ${domain} → ${link.href}`);
+        const linkText = link.textContent.trim();
+        console.log(`🔗 ${linkText} (${domain}) tıklandı → ${link.href}`);
         
         this.openSmartLink(link.href);
     }
@@ -330,47 +341,76 @@ class SmartLinkHandler {
         let appOpened = false;
         
         if (appUrl) {
-            // App scheme'i ile açmayı dene - PWA session'ını koruyarak
+            console.log(`🔗 Uygulama URL'si deneniyor: ${appUrl}`);
+            
+            // App scheme'i ile açmayı dene - iOS PWA için özel yöntem
             const visibilityHandler = () => {
                 if (document.hidden) {
                     appOpened = true;
                     document.removeEventListener('visibilitychange', visibilityHandler);
-                    console.log('Uygulama başarıyla açıldı!');
+                    console.log('✅ Uygulama başarıyla açıldı!');
+                    
+                    // PWA'ya geri dönüş için session fix
+                    setTimeout(() => {
+                        if (!document.hidden) {
+                            console.log('🔄 PWA session check...');
+                            this.ensurePWASession();
+                        }
+                    }, 1000);
                 }
             };
             
             document.addEventListener('visibilitychange', visibilityHandler);
             
-            // PWA session'ını koruyarak app'i aç
+            // iOS PWA için invisible link click yöntemi
             try {
-                // Gizli iframe ile app scheme'i dene
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = appUrl;
-                document.body.appendChild(iframe);
+                // Invisible link oluştur
+                const link = document.createElement('a');
+                link.href = appUrl;
+                link.style.display = 'none';
+                link.target = '_blank';
+                document.body.appendChild(link);
                 
-                // 2.5 saniye sonra kontrol et
+                // Link'e tıkla
+                link.click();
+                
+                // Link'i temizle
                 setTimeout(() => {
-                    document.body.removeChild(iframe);
+                    if (link.parentNode) {
+                        document.body.removeChild(link);
+                    }
+                }, 100);
+                
+                // 3 saniye sonra kontrol et
+                setTimeout(() => {
                     document.removeEventListener('visibilitychange', visibilityHandler);
                     
                     // Eğer uygulama açılmadıysa harici tarayıcıda aç
                     if (!appOpened && !document.hidden) {
-                        console.log('Uygulama bulunamadı, harici tarayıcıda açılıyor...');
-                        // PWA modunda harici tarayıcıda aç
+                        console.log('❌ Uygulama bulunamadı, harici tarayıcıda açılıyor...');
                         this.openExternalBrowser(url);
-                    } else if (appOpened) {
-                        console.log('✅ Uygulama başarıyla açıldı!');
                     }
-                }, 2500);
+                }, 3000);
                 
             } catch (e) {
-                console.log('App scheme failed:', e);
+                console.log('❌ App scheme failed:', e);
+                document.removeEventListener('visibilitychange', visibilityHandler);
                 this.openExternalBrowser(url);
             }
         } else {
             // Direkt harici tarayıcıda aç
+            console.log('❌ App URL oluşturulamadı, harici tarayıcıda açılıyor');
             this.openExternalBrowser(url);
+        }
+    }
+
+    ensurePWASession() {
+        // PWA session'ının sağlıklı olduğundan emin ol
+        if (document.body.children.length < 2) {
+            console.log('🔄 PWA session sorunu tespit edildi, sayfa yenileniyor...');
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         }
     }
 
@@ -452,8 +492,10 @@ class SmartLinkHandler {
             if (scheme === 'youtube://') {
                 const videoId = this.extractYouTubeVideoId(url);
                 if (videoId) {
+                    console.log(`🎥 YouTube Video ID: ${videoId}`);
                     return `youtube://watch?v=${videoId}`;
                 }
+                console.log(`🎥 YouTube Ana Sayfa`);
                 return 'youtube://';
             }
             
@@ -509,6 +551,16 @@ class SmartLinkHandler {
                 return 'msteams://';
             }
             
+            // Fiverr özel durumu
+            if (scheme === 'fiverr://') {
+                return 'fiverr://';
+            }
+            
+            // Upwork özel durumu
+            if (scheme === 'upwork://') {
+                return 'upwork://';
+            }
+            
             // Diğer uygulamalar için basit dönüşüm
             return scheme + urlObj.pathname + urlObj.search;
         } catch (e) {
@@ -554,19 +606,34 @@ class PWASessionRecovery {
     
     checkPageState() {
         // Eğer sayfa boşsa veya sadece beyaz ekran varsa
-        if (document.body.children.length === 0 || 
-            (document.body.textContent.trim() === '' && document.body.children.length < 3)) {
-            console.log('Boş sayfa algılandı, index sayfasına yönlendiriliyor...');
+        const hasContent = document.querySelector('.container') && 
+                          document.querySelector('.profile') &&
+                          document.querySelector('.links-container');
+        
+        if (!hasContent || document.body.children.length < 2) {
+            console.log('💀 Boş/bozuk sayfa algılandı, PWA yenileniyor...');
             this.reloadToIndex();
+        } else {
+            console.log('✅ PWA içeriği sağlıklı');
         }
     }
     
     handleVisibilityChange() {
         if (!document.hidden && this.shouldRecover()) {
-            console.log('PWA geri geldi, sayfa durumu kontrol ediliyor...');
+            console.log('🔄 PWA geri geldi, sayfa durumu kontrol ediliyor...');
+            
+            // Kademeli kontrol - önce kısa bekle, sonra uzun bekle
             setTimeout(() => {
                 this.checkPageState();
-            }, 500);
+            }, 200);
+            
+            setTimeout(() => {
+                this.checkPageState();
+            }, 1000);
+            
+            setTimeout(() => {
+                this.checkPageState();
+            }, 3000);
         }
     }
     
@@ -635,5 +702,5 @@ function hapticFeedback(type = 'light') {
 // PWA durumunu console'da göster
 console.log('PWA Mode:', isPWAMode());
 console.log('Mobile Features Loaded ✓');
-console.log('Smart Link Handler: PWA modunda uygulamaları aç, web sitesinde yeni tab');
-console.log('PWA Session Recovery: Beyaz ekran koruması aktif'); 
+console.log('Smart Link Handler: iOS PWA için optimize edildi');
+console.log('PWA Session Recovery: Güçlendirilmiş beyaz ekran koruması aktif'); 
