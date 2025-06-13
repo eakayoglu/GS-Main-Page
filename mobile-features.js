@@ -108,7 +108,7 @@ class PullToRefresh {
 class SmartLinkHandler {
     constructor() {
         this.appMappings = {
-            // Sosyal Medya - Harici tarayıcıda aç
+            // Sosyal Medya - PWA'da uygulama aç, web'de yeni tab
             'youtube.com': {
                 scheme: 'youtube://',
                 fallback: 'external'
@@ -141,7 +141,15 @@ class SmartLinkHandler {
                 scheme: 'whatsapp://',
                 fallback: 'external'
             },
+            'web.whatsapp.com': {
+                scheme: 'whatsapp://',
+                fallback: 'external'
+            },
             'telegram.org': {
+                scheme: 'tg://',
+                fallback: 'external'
+            },
+            't.me': {
                 scheme: 'tg://',
                 fallback: 'external'
             },
@@ -262,24 +270,33 @@ class SmartLinkHandler {
     openSmartLink(url) {
         const domain = this.extractDomain(url);
         const mapping = this.appMappings[domain];
+        const isPWA = isPWAMode();
+
+        console.log(`📱 PWA Mode: ${isPWA}, Domain: ${domain}`);
 
         if (mapping) {
-            if (mapping.fallback === 'external') {
-                // Harici tarayıcıda aç (AI uygulamaları ve sosyal medya)
-                this.openExternalBrowser(url);
-            } else if (mapping.fallback === 'website') {
-                // İş uygulamaları: Uygulama varsa uygulamada, yoksa siteye git
-                this.tryAppThenWebsite(url, mapping.scheme);
-            } else if (mapping.scheme && mapping.scheme !== null) {
-                // Scheme varsa: Uygulama varsa uygulamada, yoksa harici tarayıcıda aç
-                this.tryAppThenExternal(url, mapping.scheme);
+            // PWA modunda ve normal web sitesi modunda farklı davranış
+            if (isPWA) {
+                // PWA modunda: Uygulamaları açmaya çalış
+                if (mapping.scheme && mapping.scheme !== null) {
+                    console.log(`🚀 PWA modunda uygulama açılmaya çalışılıyor: ${mapping.scheme}`);
+                    this.tryAppThenExternal(url, mapping.scheme);
+                } else {
+                    console.log(`🌐 PWA modunda harici tarayıcıda açılıyor`);
+                    this.openExternalBrowser(url);
+                }
             } else {
-                // Scheme yoksa direkt harici tarayıcıda aç
-                this.openExternalBrowser(url);
+                // Normal web sitesi modunda: Yeni tab'da aç
+                console.log(`🔗 Normal web sitesi modunda yeni tab'da açılıyor`);
+                this.openNewTab(url);
             }
         } else {
-            // Varsayılan: PWA içinde aç
-            this.openInPWA(url);
+            // Varsayılan davranış
+            if (isPWA) {
+                this.openInPWA(url);
+            } else {
+                this.openNewTab(url);
+            }
         }
     }
 
@@ -340,7 +357,10 @@ class SmartLinkHandler {
                     // Eğer uygulama açılmadıysa harici tarayıcıda aç
                     if (!appOpened && !document.hidden) {
                         console.log('Uygulama bulunamadı, harici tarayıcıda açılıyor...');
+                        // PWA modunda harici tarayıcıda aç
                         this.openExternalBrowser(url);
+                    } else if (appOpened) {
+                        console.log('✅ Uygulama başarıyla açıldı!');
                     }
                 }, 2500);
                 
@@ -439,7 +459,19 @@ class SmartLinkHandler {
             
             // LinkedIn özel durumu
             if (scheme === 'linkedin://') {
-                return `linkedin://profile/${urlObj.pathname}`;
+                // LinkedIn URL'sine göre doğru scheme oluştur
+                if (urlObj.pathname.includes('/in/')) {
+                    // Profil linki: linkedin://profile/username
+                    const username = urlObj.pathname.replace('/in/', '').replace('/', '');
+                    return `linkedin://profile/${username}`;
+                } else if (urlObj.pathname.includes('/company/')) {
+                    // Şirket sayfası: linkedin://company/companyname
+                    const company = urlObj.pathname.replace('/company/', '').replace('/', '');
+                    return `linkedin://company/${company}`;
+                } else {
+                    // Genel LinkedIn uygulaması
+                    return 'linkedin://';
+                }
             }
             
             // Poe özel durumu (Gerçek scheme desteği var)
@@ -492,7 +524,14 @@ class SmartLinkHandler {
 
     openInPWA(url) {
         // PWA içinde aç (iframe veya popup)
+        console.log(`📱 PWA içinde açılıyor: ${url}`);
         window.open(url, '_blank');
+    }
+
+    openNewTab(url) {
+        // Normal web sitesi modunda yeni tab'da aç
+        console.log(`🗂️ Yeni tab'da açılıyor: ${url}`);
+        window.open(url, '_blank', 'noopener,noreferrer');
     }
 }
 
@@ -596,5 +635,5 @@ function hapticFeedback(type = 'light') {
 // PWA durumunu console'da göster
 console.log('PWA Mode:', isPWAMode());
 console.log('Mobile Features Loaded ✓');
-console.log('Smart Link Handler: AI/Sosyal medya uygulamaları harici tarayıcıda açılır');
+console.log('Smart Link Handler: PWA modunda uygulamaları aç, web sitesinde yeni tab');
 console.log('PWA Session Recovery: Beyaz ekran koruması aktif'); 
