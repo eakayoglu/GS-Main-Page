@@ -1,0 +1,36 @@
+{
+  "name": "Emre Akayoglu Dashboard",
+  "short_name": "Dashboard",
+  "description": "Kişisel bookmark dashboard",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDB912",
+  "theme_color": "#A90432",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "screenshot.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+} 

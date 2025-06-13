@@ -7,6 +7,16 @@
     <title>Emre Akayoglu</title>
     <link rel="icon" href="favicon.png" type="image/png" />
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#A90432">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dashboard">
+    <link rel="apple-touch-icon" href="favicon.png">
 </head>
 
 <body>
@@ -21,6 +31,22 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="install-pwa.js"></script>
+    
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
 </body>
 
 </html>
