@@ -4,6 +4,8 @@ const urlsToCache = [
   '/index.html',
   '/styles.css',
   '/script.js',
+  '/install-pwa.js',
+  '/mobile-features.js',
   '/data.json',
   '/favicon.png'
 ];

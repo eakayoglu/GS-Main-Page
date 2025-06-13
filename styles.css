@@ -120,4 +120,41 @@ body {
     .profile-number {
         font-size: 2rem;
     }
+    
+    /* PWA body scroll düzeltmesi */
+    body {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* PWA ve Mobil için ek stiller */
+.pull-refresh-indicator {
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+/* PWA modunda tam ekran kullanım */
+@media (display-mode: standalone) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* iOS Safari için güvenli alan */
+@supports (padding-top: env(safe-area-inset-top)) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Touch feedback için link stilleri */
+@media (hover: none) {
+    .link:active {
+        transform: scale(0.98);
+        background: rgba(255, 255, 255, 0.8);
+    }
 }
